@@ -18,10 +18,9 @@ Y_SCALING_SPACER = 0.6
 
 # Addon Status sub-panel
 class ZGSWTOR_PT_status_3dview(bpy.types.Panel):
-    
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
+    bl_category = "ZG Import"
     bl_label = "ZG SWTOR Tools Status"
 
     def draw(self, context):
@@ -113,7 +112,7 @@ class ZGSWTOR_PT_status_3dview(bpy.types.Panel):
 class ZGSWTOR_PT_area_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
+    bl_category = "ZG Import"
     bl_label = "SWTOR Area Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -256,7 +255,7 @@ class ZGSWTOR_PT_area_tools(bpy.types.Panel):
 class ZGSWTOR_PT_character_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
+    bl_category = "ZG Import"
     bl_label = "SWTOR Character Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -377,8 +376,8 @@ class ZGSWTOR_PT_character_tools(bpy.types.Panel):
 class ZGSWTOR_PT_materials_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
-    bl_label = "SWTOR Materials Tools"
+    bl_category = "ZG Scene"
+    bl_label = "SWTOR Create Materials Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -387,18 +386,6 @@ class ZGSWTOR_PT_materials_tools(bpy.types.Panel):
 
         layout = self.layout
         layout.scale_y = Y_SCALING_GRAL
-
-
-
-        # set_backface_culling UI
-        # ------------------------
-        tool_section = layout.box()
-        row = tool_section.row(align=True)
-        row.operator("zgswtor.set_backface_culling", text="Set Backface Culling On").action="BACKFACE_CULLING_ON"
-        
-        in_row = row.row()  # for setting a non-50% contiguous row region
-        in_row.scale_x = 0.35
-        in_row.operator("zgswtor.set_backface_culling", text="Off").action="BACKFACE_CULLING_OFF"
 
 
 
@@ -473,9 +460,136 @@ class ZGSWTOR_PT_materials_tools(bpy.types.Panel):
         split.prop(context.scene, "apply_skinsettings_name", text="")
         tool_section.prop(context.scene, "apply_skinsettings_twilek", text="Override Twi'lek Gloss")
     
+# ---------------------------------------------------------------
 
 
-        # set_custom_shaders_values UI
+
+# Objects Tools sub-panel
+class ZGSWTOR_PT_objects_tools(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "ZG Scene"
+    bl_label = "SWTOR Objects Tools"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        
+        layout = self.layout
+        layout.scale_y = Y_SCALING_GRAL
+
+        # remove_doubles UI
+        # ------------------------
+        tool_section = layout.box()
+        
+        col=tool_section.column(align=False)
+        col.label(text="Merge Double Vertices")
+        
+        split = col.split(factor= 0.7, align=True)
+        col_left, col_right = split.column(align=True), split.column(align=True)
+
+        remove_doubles = col_left.operator("zgswtor.remove_doubles", text="Selected Objects")
+        col_left.enabled = len(bpy.context.selected_objects) != 0
+        remove_doubles.use_selection_only = True
+
+        remove_doubles = col_right.operator("zgswtor.remove_doubles", text="All")
+        col_right.enabled = len(bpy.data.objects) != 0
+        remove_doubles.use_selection_only = False
+
+        # remove_doubles_edit_mode UI
+        # ------------------------
+        # col.separator(factor=1)
+        
+        col=tool_section.column(align=False)
+        col.operator("zgswtor.remove_doubles_edit_mode", text="Selected Verts. (Edit Mode)")
+        
+        col_info=col.column(align=True)
+        col_info.scale_y = Y_SCALING_INFO
+        col_info.enabled = context.mode == 'EDIT_MESH'
+        col.enabled = context.mode == 'EDIT_MESH'
+        btn_clear_sharp = col.operator("mesh.mark_sharp", text="Clear Sharps In Selected")
+
+        btn_clear_sharp.clear = True
+        col.prop(context.space_data.overlay, "show_edge_sharp", text="Display Sharp Edges", toggle=False)
+
+
+        # clear_splitnormals_layers UI
+        # ------------------------
+        # tool_section = layout.box()
+        # col=tool_section.column(align=False)
+        # col.label(text="Clear Split Normals Layers")
+        
+        # split = col.split(factor= 0.7, align=True)
+        # col_left, col_right = split.column(align=True), split.column(align=True)
+
+        # clear_spl_normals = col_left.operator("zgswtor.clear_splitnormals_layers", text="Selected Objects")
+        # col_left.enabled = len(bpy.context.selected_objects) != 0
+        # clear_spl_normals.use_selection_only = True
+
+        # clear_spl_normals = col_right.operator("zgswtor.clear_splitnormals_layers", text="All")
+        # col_right.enabled = len(bpy.data.objects) != 0
+        # clear_spl_normals.use_selection_only = False
+
+                
+        # tris_to_quads = col.operator("mesh.tris_convert_to_quads", text="Tris to Quads (Comparing)")
+        # tris_to_quads.uvs = True
+        # tris_to_quads.materials = True
+
+
+
+        # set_modifiers UI
+        # ------------------------
+        tool_section = layout.box()
+        col=tool_section.column(align=False)
+        col.label(text="Add Modifiers To Selection")
+        grid = col.grid_flow(row_major=True, columns=2, align=True)
+        grid.operator("zgswtor.set_modifiers", text="SubD").action = "add_subd"
+        grid.operator("zgswtor.set_modifiers", text="Multires").action = "add_multires"
+        grid.operator("zgswtor.set_modifiers", text="Displace").action = "add_displace"
+        grid.operator("zgswtor.set_modifiers", text="Solidify").action = "add_solidify"
+        grid.operator("zgswtor.set_modifiers", text="Smooth Corrective").action = "add_smooth_corrective"
+        shbutton=grid.row(align=True)
+        shbutton.active = (bpy.context.scene.ZGshrinkwrap_target is not None)
+        shbutton.operator("zgswtor.set_modifiers", text="Shrinkwrap").action = "add_shrinkwrap"
+        row = col.row(align=True)
+        split = row.split(factor=0.57, align=True)
+        split.label(text="Shrinkw. Target")
+        split.prop(context.scene, "ZGshrinkwrap_target", text="")
+
+        row = col.row()
+        row.operator("zgswtor.set_modifiers", text="Remove These Modifiers").action = "remove_them"
+
+        row = col.row()
+        row.label(text="Set Armature as")
+        in_row = row.row(align=True)  # for setting a non-50% contiguous row region
+        in_row.scale_x = 0.55
+        in_row.operator("zgswtor.set_modifiers", text="First").action = "armature_first"
+        in_row.operator("zgswtor.set_modifiers", text="Last").action = "armature_last"
+
+        row = col.row()
+        row.label(text="Preserve Volume")
+        in_row = row.row(align=True)  # for setting a non-50% contiguous row region
+        in_row.scale_x = 0.55  # Percentage of a full half row
+        in_row.operator("zgswtor.set_modifiers", text="On").action = "preserve_volume_on"
+        in_row.operator("zgswtor.set_modifiers", text="Off").action = "preserve_volume_off"
+
+# ---------------------------------------------------------------
+
+# Advanced Materials Tools sub-panel
+class ZGSWTOR_PT_adv_materials_tools(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "ZG Scene"
+    bl_label = "SWTOR Advanced Materials Tools"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+
+        checks = requirements_checks()
+
+        layout = self.layout
+        layout.scale_y = Y_SCALING_GRAL
+
+# set_custom_shaders_values UI
         # ------------------------
         # (belongs to the same Custom Shaders toolset)
 
@@ -548,24 +662,34 @@ class ZGSWTOR_PT_materials_tools(bpy.types.Panel):
         col.operator("zgswtor.set_dds", text="Set all .dds to Non-Color")
 
 
+        # set_backface_culling UI
+        # ------------------------
+        tool_section = layout.box()
+        row = tool_section.row(align=True)
+        row.operator("zgswtor.set_backface_culling", text="Set Backface Culling On").action="BACKFACE_CULLING_ON"
+        
+        in_row = row.row()  # for setting a non-50% contiguous row region
+        in_row.scale_x = 0.35
+        in_row.operator("zgswtor.set_backface_culling", text="Off").action="BACKFACE_CULLING_OFF"
 
+      
+    
 # ---------------------------------------------------------------
 
-
-
-# Objects Tools sub-panel
-class ZGSWTOR_PT_objects_tools(bpy.types.Panel):
+# Advanced Objects Tools sub-panel
+class ZGSWTOR_PT_adv_objects_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
-    bl_label = "SWTOR Objects Tools"
+    bl_category = "ZG Scene"
+    bl_label = "SWTOR Advanced Objects Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        
+
+        checks = requirements_checks()
+
         layout = self.layout
         layout.scale_y = Y_SCALING_GRAL
-
 
 
         # quickscale UI
@@ -646,108 +770,7 @@ class ZGSWTOR_PT_objects_tools(bpy.types.Panel):
             pass
 
 
-
-        # remove_doubles UI
-        # ------------------------
-        tool_section = layout.box()
-        
-        col=tool_section.column(align=False)
-        col.label(text="Merge Double Vertices")
-        
-        split = col.split(factor= 0.7, align=True)
-        col_left, col_right = split.column(align=True), split.column(align=True)
-
-        remove_doubles = col_left.operator("zgswtor.remove_doubles", text="Selected Objects")
-        col_left.enabled = len(bpy.context.selected_objects) != 0
-        remove_doubles.use_selection_only = True
-
-        remove_doubles = col_right.operator("zgswtor.remove_doubles", text="All")
-        col_right.enabled = len(bpy.data.objects) != 0
-        remove_doubles.use_selection_only = False
-
-        # remove_doubles_edit_mode UI
-        # ------------------------
-        # col.separator(factor=1)
-        
-        col=tool_section.column(align=False)
-        col.operator("zgswtor.remove_doubles_edit_mode", text="Selected Verts. (Edit Mode)")
-        
-        col_info=col.column(align=True)
-        col_info.scale_y = Y_SCALING_INFO
-        col_info.enabled = context.mode == 'EDIT_MESH'
-        
-        col_info.separator(factor=2)
-        col_info.label(text="Use ONLY if merging vertices")
-        col_info.label(text="creates NEW sharp edges:")
-        col.enabled = context.mode == 'EDIT_MESH'
-        btn_clear_sharp = col.operator("mesh.mark_sharp", text="Clear Sharps In Selected")
-        btn_clear_sharp.clear = True
-        col.prop(context.space_data.overlay, "show_edge_sharp", text="Display Sharp Edges", toggle=False)
-
-
-        # clear_splitnormals_layers UI
-        # ------------------------
-        # tool_section = layout.box()
-        # col=tool_section.column(align=False)
-        # col.label(text="Clear Split Normals Layers")
-        
-        # split = col.split(factor= 0.7, align=True)
-        # col_left, col_right = split.column(align=True), split.column(align=True)
-
-        # clear_spl_normals = col_left.operator("zgswtor.clear_splitnormals_layers", text="Selected Objects")
-        # col_left.enabled = len(bpy.context.selected_objects) != 0
-        # clear_spl_normals.use_selection_only = True
-
-        # clear_spl_normals = col_right.operator("zgswtor.clear_splitnormals_layers", text="All")
-        # col_right.enabled = len(bpy.data.objects) != 0
-        # clear_spl_normals.use_selection_only = False
-
-                
-        # tris_to_quads = col.operator("mesh.tris_convert_to_quads", text="Tris to Quads (Comparing)")
-        # tris_to_quads.uvs = True
-        # tris_to_quads.materials = True
-
-
-
-        # set_modifiers UI
-        # ------------------------
-        tool_section = layout.box()
-        col=tool_section.column(align=False)
-        col.label(text="Add Modifiers To Selection")
-        grid = col.grid_flow(row_major=True, columns=2, align=True)
-        grid.operator("zgswtor.set_modifiers", text="SubD").action = "add_subd"
-        grid.operator("zgswtor.set_modifiers", text="Multires").action = "add_multires"
-        grid.operator("zgswtor.set_modifiers", text="Displace").action = "add_displace"
-        grid.operator("zgswtor.set_modifiers", text="Solidify").action = "add_solidify"
-        grid.operator("zgswtor.set_modifiers", text="Smooth Corrective").action = "add_smooth_corrective"
-        shbutton=grid.row(align=True)
-        shbutton.active = (bpy.context.scene.ZGshrinkwrap_target is not None)
-        shbutton.operator("zgswtor.set_modifiers", text="Shrinkwrap").action = "add_shrinkwrap"
-        row = col.row(align=True)
-        split = row.split(factor=0.57, align=True)
-        split.label(text="Shrinkw. Target")
-        split.prop(context.scene, "ZGshrinkwrap_target", text="")
-
-        row = col.row()
-        row.operator("zgswtor.set_modifiers", text="Remove These Modifiers").action = "remove_them"
-
-        row = col.row()
-        row.label(text="Set Armature as")
-        in_row = row.row(align=True)  # for setting a non-50% contiguous row region
-        in_row.scale_x = 0.55
-        in_row.operator("zgswtor.set_modifiers", text="First").action = "armature_first"
-        in_row.operator("zgswtor.set_modifiers", text="Last").action = "armature_last"
-
-        row = col.row()
-        row.label(text="Preserve Volume")
-        in_row = row.row(align=True)  # for setting a non-50% contiguous row region
-        in_row.scale_x = 0.55  # Percentage of a full half row
-        in_row.operator("zgswtor.set_modifiers", text="On").action = "preserve_volume_on"
-        in_row.operator("zgswtor.set_modifiers", text="Off").action = "preserve_volume_off"
-
-
-
-        # set_swtor_obj_custom_props UI
+                # set_swtor_obj_custom_props UI
         # ------------------------
         tool_section = layout.box()
 
@@ -805,18 +828,15 @@ class ZGSWTOR_PT_objects_tools(bpy.types.Panel):
         col_right.enabled = len(bpy.data.objects) != 0
         set_props.use_selection_only = False
         set_props.delete_props = True
-
-
-
+      
+    
 # ---------------------------------------------------------------
-
-
 
 # Pose/Sculpt Tools sub-panel
 class ZGSWTOR_PT_pose_sculpt_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
+    bl_category = "ZG Scene"
     bl_label = "SWTOR Pose & Sculpt Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -866,7 +886,7 @@ class ZGSWTOR_PT_pose_sculpt_tools(bpy.types.Panel):
 class ZGSWTOR_PT_baking_tools(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "ZG SWTOR"
+    bl_category = "ZG Import"
     bl_label = "SWTOR Baking Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -939,11 +959,11 @@ class ZGSWTOR_PT_baking_tools(bpy.types.Panel):
 
 # Addon Status sub-panel
 class ZGSWTOR_PT_status_node_editor(bpy.types.Panel):
-    
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "ZG SWTOR"
     bl_label = "ZG SWTOR Tools Status"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         
@@ -1082,15 +1102,19 @@ class ZGSWTOR_PT_shader_tools(bpy.types.Panel):
 
 
 classes = [
-    ZGSWTOR_PT_status_3dview,
-    ZGSWTOR_PT_area_tools,
-    ZGSWTOR_PT_character_tools,
+    ZGSWTOR_PT_pose_sculpt_tools,
     ZGSWTOR_PT_materials_tools,
     ZGSWTOR_PT_objects_tools,
-    ZGSWTOR_PT_pose_sculpt_tools,
+    ZGSWTOR_PT_adv_materials_tools,
+    ZGSWTOR_PT_adv_objects_tools,
+    
     ZGSWTOR_PT_baking_tools,
+    ZGSWTOR_PT_character_tools,
+    ZGSWTOR_PT_area_tools,
+    ZGSWTOR_PT_status_3dview,
+    
     ZGSWTOR_PT_status_node_editor,
-    ZGSWTOR_PT_shader_tools,
+    ZGSWTOR_PT_shader_tools
 ]
 
 def register():
